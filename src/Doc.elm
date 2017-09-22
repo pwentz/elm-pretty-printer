@@ -64,6 +64,7 @@ module Doc
         , string
         , surround
         , surroundJoin
+        , toHtml
         , toString
         , underline
         , white
@@ -138,6 +139,8 @@ must be passed as the first argument of `Debug.log` (or `console.log` via [Ports
 
 import Basics
 import Console as Ansi
+import Html
+import Html.Attributes as Attr
 import Utils
 
 
@@ -1115,6 +1118,35 @@ This function is useful if you don't care about custom widths and just want to p
 toString : Doc -> Result String String
 toString doc =
     display (renderPretty 0.4 80 doc)
+
+
+toHtml : SimpleDoc -> Html.Html a
+toHtml simpleDoc =
+    let
+        recur : SimpleDoc -> List (Html.Html a)
+        recur sDoc =
+            case sDoc of
+                SFail ->
+                    []
+
+                SEmpty ->
+                    []
+
+                SChar char sDoc_ ->
+                    Html.text (String.fromChar char) :: recur sDoc_
+
+                SText length content sDoc_ ->
+                    Html.text content :: recur sDoc_
+
+                SLine indent sDoc_ ->
+                    Html.br [] [] :: Html.span [] [ Html.text (String.repeat indent " ") ] :: recur sDoc_
+
+                SFormatted formatters sDoc_ ->
+                    recur sDoc_
+    in
+    Html.div
+        [ Attr.style [ ( "font-family", "monospace" ) ] ]
+        (recur simpleDoc)
 
 
 {-| Convert a `Doc` into `NormalForm` by specifying both the ribbon width and the page width.
