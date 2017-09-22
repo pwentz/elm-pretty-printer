@@ -775,8 +775,8 @@ width doc addSpaces =
 -- COLORS
 
 
-color : Color -> Doc -> Doc
-color =
+fgColor : Color -> Doc -> Doc
+fgColor =
     Color Foreground
 
 
@@ -784,105 +784,105 @@ color =
 -}
 black : Doc -> Doc
 black =
-    color (Black Ansi.black)
+    fgColor (Black Ansi.black)
 
 
 {-| Changes text color of Doc to red.
 -}
 red : Doc -> Doc
 red =
-    color (Red Ansi.red)
+    fgColor (Red Ansi.red)
 
 
 {-| Changes text color of Doc to dark red.
 -}
 darkRed : Doc -> Doc
 darkRed =
-    color <| Red (Ansi.dark << Ansi.red)
+    fgColor <| Red (Ansi.dark << Ansi.red)
 
 
 {-| Changes text color of Doc to green.
 -}
 green : Doc -> Doc
 green =
-    color (Green Ansi.green)
+    fgColor (Green Ansi.green)
 
 
 {-| Changes text color of Doc to dark green.
 -}
 darkGreen : Doc -> Doc
 darkGreen =
-    color <| Green (Ansi.dark << Ansi.green)
+    fgColor <| Green (Ansi.dark << Ansi.green)
 
 
 {-| Changes text color of Doc to yellow.
 -}
 yellow : Doc -> Doc
 yellow =
-    color (Yellow Ansi.yellow)
+    fgColor (Yellow Ansi.yellow)
 
 
 {-| Changes text color of Doc to dark yellow.
 -}
 darkYellow : Doc -> Doc
 darkYellow =
-    color <| Yellow (Ansi.dark << Ansi.yellow)
+    fgColor <| Yellow (Ansi.dark << Ansi.yellow)
 
 
 {-| Changes text color of Doc to blue.
 -}
 blue : Doc -> Doc
 blue =
-    color (Blue Ansi.blue)
+    fgColor (Blue Ansi.blue)
 
 
 {-| Changes text color of Doc to dark blue.
 -}
 darkBlue : Doc -> Doc
 darkBlue =
-    color <| Blue (Ansi.dark << Ansi.blue)
+    fgColor <| Blue (Ansi.dark << Ansi.blue)
 
 
 {-| Changes text color of Doc to magenta.
 -}
 magenta : Doc -> Doc
 magenta =
-    color (Magenta Ansi.magenta)
+    fgColor (Magenta Ansi.magenta)
 
 
 {-| Changes text color of Doc to dark magenta.
 -}
 darkMagenta : Doc -> Doc
 darkMagenta =
-    color <| Magenta (Ansi.dark << Ansi.magenta)
+    fgColor <| Magenta (Ansi.dark << Ansi.magenta)
 
 
 {-| Changes text color of Doc to cyan.
 -}
 cyan : Doc -> Doc
 cyan =
-    color (Cyan Ansi.cyan)
+    fgColor (Cyan Ansi.cyan)
 
 
 {-| Changes text color of Doc to dark cyan.
 -}
 darkCyan : Doc -> Doc
 darkCyan =
-    color <| Cyan (Ansi.dark << Ansi.cyan)
+    fgColor <| Cyan (Ansi.dark << Ansi.cyan)
 
 
 {-| Changes text color of Doc to white.
 -}
 white : Doc -> Doc
 white =
-    color (White Ansi.white)
+    fgColor (White Ansi.white)
 
 
 {-| Changes text color of Doc to dark white.
 -}
 darkWhite : Doc -> Doc
 darkWhite =
-    color <| White (Ansi.dark << Ansi.white)
+    fgColor <| White (Ansi.dark << Ansi.white)
 
 
 bgColor : Color -> Doc -> Doc
@@ -1120,6 +1120,32 @@ toString doc =
     display (renderPretty 0.4 80 doc)
 
 
+{-| Takes a SimpleDoc and converts it to a String
+-}
+display : SimpleDoc -> Maybe String
+display simpleDoc =
+    case simpleDoc of
+        SFail ->
+            Nothing
+
+        SEmpty ->
+            Just ""
+
+        SChar char sDoc ->
+            Maybe.map (String.cons char) (display sDoc)
+
+        SText _ content sDoc ->
+            Maybe.map (String.append content) (display sDoc)
+
+        SLine indents sDoc ->
+            display sDoc
+                |> Maybe.map (String.append (String.cons '\n' (Utils.spaces indents)))
+
+        SFormatted formats sDoc ->
+            List.map getFormatter formats
+                |> List.foldr Maybe.map (display sDoc)
+
+
 toHtml : SimpleDoc -> Html.Html a
 toHtml simpleDoc =
     let
@@ -1142,11 +1168,35 @@ toHtml simpleDoc =
                     Html.br [] [] :: Html.span [] [ Html.text (String.repeat indent " ") ] :: recur sDoc_
 
                 SFormatted formatters sDoc_ ->
-                    recur sDoc_
+                    List.foldr
+                        List.map
+                        (recur sDoc_)
+                        (List.map getHtmlFormatter formatters)
     in
     Html.div
         [ Attr.style [ ( "font-family", "monospace" ) ] ]
         (recur simpleDoc)
+
+
+getHtmlFormatter : TextFormat -> (Html.Html a -> Html.Html a)
+getHtmlFormatter textFormatter =
+    case textFormatter of
+        WithColor layer color ->
+            case layer of
+                Foreground ->
+                    htmlFromColor color
+
+                Background ->
+                    identity
+
+        WithUnderline _ ->
+            \html -> Html.span [ Attr.style [ ( "text-decoration", "underline" ) ] ] [ html ]
+
+        WithBold _ ->
+            \html -> Html.span [ Attr.style [ ( "font-weight", "bold" ) ] ] [ html ]
+
+        Reset ->
+            identity
 
 
 {-| Convert a `Doc` into `NormalForm` by specifying both the ribbon width and the page width.
@@ -1357,22 +1407,6 @@ display simpleDoc =
                 |> List.foldr Result.map (display sDoc)
 
 
-getFormatter : TextFormat -> Formatter
-getFormatter format =
-    case format of
-        Default ->
-            Ansi.plain
-
-        WithColor layer color ->
-            colorFormatter color
-
-        WithUnderline underliner ->
-            underliner
-
-        WithBold formatter ->
-            formatter
-
-
 
 -- PRIVATE
 
@@ -1465,3 +1499,51 @@ colorFormatter color =
 
         White toWhite ->
             toWhite
+
+
+getFormatter : TextFormat -> Formatter
+getFormatter format =
+    case format of
+        Default ->
+            Ansi.plain
+
+        WithColor layer color ->
+            colorFormatter color
+
+        WithUnderline underliner ->
+            underliner
+
+        WithBold formatter ->
+            formatter
+
+
+htmlFromColor : Color -> (Html.Html a -> Html.Html a)
+htmlFromColor color =
+    let
+        toColor color =
+            \html -> Html.span [ Attr.style [ ( "color", color ) ] ] [ html ]
+    in
+    case color of
+        Black _ ->
+            toColor "Black"
+
+        Red _ ->
+            toColor "Red"
+
+        Green _ ->
+            toColor "Green"
+
+        Yellow _ ->
+            toColor "Yellow"
+
+        Blue _ ->
+            toColor "Blue"
+
+        Magenta _ ->
+            toColor "Magenta"
+
+        Cyan _ ->
+            toColor "Cyan"
+
+        White _ ->
+            toColor "White"

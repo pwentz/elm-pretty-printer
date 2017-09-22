@@ -23,6 +23,11 @@ main =
         }
 
 
+view : Model -> Html Msg
+view model =
+    model.content
+
+
 update : Msg -> Model -> Model
 update msg model =
     case msg of
@@ -36,9 +41,14 @@ sample =
         |+ Doc.line
         |+ Doc.string "world"
         |> Doc.align
-        |> (|+) (Doc.string "hi ")
+        |> (|+) (Doc.red (Doc.string "hi "))
 
 
 prettyHtml : Html a
 prettyHtml =
     Doc.toHtml (Doc.renderPretty 0.4 80 sample)
+
+
+prettyString : Maybe String
+prettyString =
+    Doc.display (Doc.renderPretty 0.4 80 sample)
