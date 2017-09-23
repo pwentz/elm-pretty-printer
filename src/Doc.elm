@@ -1168,35 +1168,38 @@ toHtml simpleDoc =
                     Html.br [] [] :: Html.span [] [ Html.text (String.repeat indent " ") ] :: recur sDoc_
 
                 SFormatted formatters sDoc_ ->
-                    List.foldr
-                        List.map
-                        (recur sDoc_)
-                        (List.map getHtmlFormatter formatters)
+                    let
+                        styles =
+                            List.concatMap getHtmlFormatter formatters
+                    in
+                    [ Html.span [ Attr.style styles ] (recur sDoc_) ]
     in
     Html.div
         [ Attr.style [ ( "font-family", "monospace" ) ] ]
         (recur simpleDoc)
 
 
-getHtmlFormatter : TextFormat -> (Html.Html a -> Html.Html a)
+getHtmlFormatter : TextFormat -> List ( String, String )
 getHtmlFormatter textFormatter =
     case textFormatter of
         WithColor layer color ->
             case layer of
                 Foreground ->
-                    htmlFromColor color
+                    [ htmlFromColor color ]
 
                 Background ->
-                    identity
+                    []
 
         WithUnderline _ ->
-            \html -> Html.span [ Attr.style [ ( "text-decoration", "underline" ) ] ] [ html ]
+            [ ( "text-decoration", "underline" ) ]
 
         WithBold _ ->
-            \html -> Html.span [ Attr.style [ ( "font-weight", "bold" ) ] ] [ html ]
+            [ ( "font-weight", "bold" ) ]
 
         Reset ->
-            identity
+            [ ( "color", "Black" )
+            , ( "font-weight", "normal" )
+            ]
 
 
 {-| Convert a `Doc` into `NormalForm` by specifying both the ribbon width and the page width.
@@ -1460,7 +1463,9 @@ parseString str =
                     line |+ doc
 
                 "\t" ->
-                    space |+ space |+ space |+ space |+ doc
+                    [ doc ]
+                        |> List.append (List.repeat 4 space)
+                        |> concat
 
                 " " ->
                     space |+ doc
@@ -1517,33 +1522,29 @@ getFormatter format =
             formatter
 
 
-htmlFromColor : Color -> (Html.Html a -> Html.Html a)
+htmlFromColor : Color -> ( String, String )
 htmlFromColor color =
-    let
-        toColor color =
-            \html -> Html.span [ Attr.style [ ( "color", color ) ] ] [ html ]
-    in
     case color of
         Black _ ->
-            toColor "Black"
+            ( "color", "Black" )
 
         Red _ ->
-            toColor "Red"
+            ( "color", "Red" )
 
         Green _ ->
-            toColor "Green"
+            ( "color", "Green" )
 
         Yellow _ ->
-            toColor "Yellow"
+            ( "color", "Yellow" )
 
         Blue _ ->
-            toColor "Blue"
+            ( "color", "Blue" )
 
         Magenta _ ->
-            toColor "Magenta"
+            ( "color", "Magenta" )
 
         Cyan _ ->
-            toColor "Cyan"
+            ( "color", "Cyan" )
 
         White _ ->
-            toColor "White"
+            ( "color", "White" )
