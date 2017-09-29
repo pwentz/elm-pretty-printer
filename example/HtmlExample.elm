@@ -1,4 +1,4 @@
-module Example exposing (..)
+module HtmlExample exposing (..)
 
 import Doc exposing ((|+), Doc)
 import Html exposing (..)
@@ -18,15 +18,6 @@ type Msg
     = WindowResize { width : Int, height : Int }
 
 
-{-| TODO:
-
-      - Background color!
-      - Find way to remove text-decoration from child elements
-      - Add extra color elements for DarkYellow, DarkRed, etc.
-      - Remove subtle bug with Bold
-        - replace Doc.red in complexSample with Doc.bold
-
--}
 main =
     Html.program
         { init = init
@@ -57,7 +48,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update (WindowResize { width, height }) model =
     ( { model
         | content =
-            complexSample
+            jsonSample
                 |> Doc.renderPretty 1.0 (round (toFloat width / pixelsPerChar))
                 |> Doc.toHtml
                 |> Just
@@ -108,7 +99,8 @@ listSample =
             , "ddddddddddddddddddddddddddddddddd"
             ]
     in
-    Doc.list (List.map Doc.string listToRender)
+    List.map Doc.string listToRender
+        |> Doc.surroundJoin (Doc.char '[') (Doc.char ']') (Doc.char ',')
 
 
 treeSample : Doc
@@ -134,7 +126,7 @@ prettyHtml =
     Doc.toHtml (Doc.renderPretty 0.4 80 sample)
 
 
-prettyString : Maybe String
+prettyString : Result String String
 prettyString =
     Doc.display (Doc.renderPretty 0.4 80 sample)
 
@@ -142,3 +134,58 @@ prettyString =
 pixelsPerChar : Float
 pixelsPerChar =
     8
+
+
+prettyKeyVal : ( String, String ) -> Doc
+prettyKeyVal ( attr, value ) =
+    let
+        prettyAttr =
+            Doc.string attr
+                |> Doc.red
+                |> Doc.bold
+                |> Doc.dquotes
+    in
+    Doc.fill 12 prettyAttr
+        |+ Doc.fill 4 (Doc.char ':')
+        |+ Doc.dquotes (Doc.green (Doc.string value))
+
+
+prettyJson : List ( String, String ) -> Doc
+prettyJson data =
+    List.map prettyKeyVal data
+        |> Doc.join (Doc.char ',' |+ Doc.line)
+        |> Doc.align
+        |> Doc.indent 4
+        |> wrapLines
+        |> Doc.braces
+
+
+jsonSample : Doc
+jsonSample =
+    [ sampleData1, sampleData2 ]
+        |> List.map prettyJson
+        |> Doc.join (wrapLines (Doc.char ','))
+        |> Doc.indent 4
+        |> wrapLines
+        |> Doc.brackets
+
+
+sampleData1 : List ( String, String )
+sampleData1 =
+    [ ( "full_name", "Bill Johnson" )
+    , ( "address", "123 Fake St" )
+    , ( "role", "guest" )
+    ]
+
+
+sampleData2 : List ( String, String )
+sampleData2 =
+    [ ( "full_name", "Jane Doe" )
+    , ( "address", "1432 Westgreen Terrace" )
+    , ( "role", "admin" )
+    ]
+
+
+wrapLines : Doc -> Doc
+wrapLines =
+    Doc.surround Doc.line Doc.line

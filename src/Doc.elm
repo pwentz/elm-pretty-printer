@@ -133,7 +133,7 @@ must be passed as the first argument of `Debug.log` (or `console.log` via [Ports
 
 ## Rendering
 
-@docs NormalForm, TextFormat, renderPretty, toString, display
+@docs NormalForm, TextFormat, renderPretty, toString, toHtml, display
 
 -}
 
@@ -1120,54 +1120,30 @@ toString doc =
     display (renderPretty 0.4 80 doc)
 
 
-{-| Takes a SimpleDoc and converts it to a String
+{-| Converts NormalForm to Html
 -}
-display : SimpleDoc -> Maybe String
-display simpleDoc =
-    case simpleDoc of
-        SFail ->
-            Nothing
-
-        SEmpty ->
-            Just ""
-
-        SChar char sDoc ->
-            Maybe.map (String.cons char) (display sDoc)
-
-        SText _ content sDoc ->
-            Maybe.map (String.append content) (display sDoc)
-
-        SLine indents sDoc ->
-            display sDoc
-                |> Maybe.map (String.append (String.cons '\n' (Utils.spaces indents)))
-
-        SFormatted formats sDoc ->
-            List.map getFormatter formats
-                |> List.foldr Maybe.map (display sDoc)
-
-
-toHtml : SimpleDoc -> Html.Html a
+toHtml : NormalForm -> Html.Html a
 toHtml simpleDoc =
     let
-        recur : SimpleDoc -> List (Html.Html a)
+        recur : NormalForm -> List (Html.Html a)
         recur sDoc =
             case sDoc of
-                SFail ->
+                Fail ->
                     []
 
-                SEmpty ->
+                Blank ->
                     []
 
-                SChar char sDoc_ ->
+                Char char sDoc_ ->
                     Html.text (String.fromChar char) :: recur sDoc_
 
-                SText length content sDoc_ ->
+                Text length content sDoc_ ->
                     Html.text content :: recur sDoc_
 
-                SLine indent sDoc_ ->
+                Line indent sDoc_ ->
                     Html.br [] [] :: Html.span [] [ Html.text (String.repeat indent " ") ] :: recur sDoc_
 
-                SFormatted formatters sDoc_ ->
+                Formatted formatters sDoc_ ->
                     let
                         styles =
                             List.concatMap getHtmlFormatter formatters
@@ -1196,7 +1172,7 @@ getHtmlFormatter textFormatter =
         WithBold _ ->
             [ ( "font-weight", "bold" ) ]
 
-        Reset ->
+        Default ->
             [ ( "color", "Black" )
             , ( "font-weight", "normal" )
             ]
