@@ -1221,8 +1221,8 @@ renderFits doesItFit ribbonPct pageWidth doc =
                             nicest
                                 indent
                                 currCol
-                                (recur indent currCol (Cons n doc1 documents))
-                                (\() -> (recur indent currCol (Cons n doc2 documents)))
+                                (best indent currCol foregroundColor backgroundColor isTxtBold isTxtUnderlined (Cons n doc1 documents))
+                                (\() -> (best indent currCol foregroundColor backgroundColor isTxtBold isTxtUnderlined (Cons n doc2 documents)))
 
                         Column fn ->
                             best indent currCol foregroundColor backgroundColor isTxtBold isTxtUnderlined (Cons n (fn currCol) documents)
