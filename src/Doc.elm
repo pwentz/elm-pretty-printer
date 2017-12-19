@@ -1184,9 +1184,6 @@ renderFits doesItFit ribbonPct pageWidth doc =
 
                 Cons n document documents ->
                     let
-                        recur indent currCol docs =
-                            best indent currCol foregroundColor backgroundColor isTxtBold isTxtUnderlined docs
-
                         dsRestore =
                             Cons n
                                 (RestoreFormat
@@ -1200,41 +1197,41 @@ renderFits doesItFit ribbonPct pageWidth doc =
                     in
                     case document of
                         Empty ->
-                            recur indent currCol documents
+                            best indent currCol foregroundColor backgroundColor isTxtBold isTxtUnderlined documents
 
                         Character char ->
-                            Char char (recur indent (currCol + 1) documents)
+                            Char char (best indent (currCol + 1) foregroundColor backgroundColor isTxtBold isTxtUnderlined documents)
 
                         Txt length str ->
-                            Text length str (recur indent (currCol + length) documents)
+                            Text length str (best indent (currCol + length) foregroundColor backgroundColor isTxtBold isTxtUnderlined documents)
 
                         Break ->
-                            Line n (recur n n documents)
+                            Line n (best n n foregroundColor backgroundColor isTxtBold isTxtUnderlined documents)
 
                         FlatAlt doc1 _ ->
-                            recur indent currCol (Cons n doc1 documents)
+                            best indent currCol foregroundColor backgroundColor isTxtBold isTxtUnderlined (Cons n doc1 documents)
 
                         Cat doc1 doc2 ->
-                            recur indent currCol (Cons n doc1 (Cons n doc2 documents))
+                            best indent currCol foregroundColor backgroundColor isTxtBold isTxtUnderlined (Cons n doc1 (Cons n doc2 documents))
 
                         Nest num nestedDoc ->
-                            recur indent currCol (Cons (num + n) nestedDoc documents)
+                            best indent currCol foregroundColor backgroundColor isTxtBold isTxtUnderlined (Cons (num + n) nestedDoc documents)
 
                         Union doc1 doc2 ->
                             nicest
                                 indent
                                 currCol
-                                (recur indent currCol (Cons n doc1 documents))
-                                (recur indent currCol (Cons n doc2 documents))
+                                (best indent currCol foregroundColor backgroundColor isTxtBold isTxtUnderlined (Cons n doc1 documents))
+                                (best indent currCol foregroundColor backgroundColor isTxtBold isTxtUnderlined (Cons n doc2 documents))
 
                         Column fn ->
-                            recur indent currCol (Cons n (fn currCol) documents)
+                            best indent currCol foregroundColor backgroundColor isTxtBold isTxtUnderlined (Cons n (fn currCol) documents)
 
                         Columns fn ->
-                            recur indent currCol (Cons n (fn (Just pageWidth)) documents)
+                            best indent currCol foregroundColor backgroundColor isTxtBold isTxtUnderlined (Cons n (fn (Just pageWidth)) documents)
 
                         Nesting fn ->
-                            recur indent currCol (Cons n (fn n) documents)
+                            best indent currCol foregroundColor backgroundColor isTxtBold isTxtUnderlined (Cons n (fn n) documents)
 
                         Color layer color doc ->
                             let
