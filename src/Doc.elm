@@ -1221,8 +1221,8 @@ renderFits doesItFit ribbonPct pageWidth doc =
                             nicest
                                 indent
                                 currCol
-                                (best indent currCol foregroundColor backgroundColor isTxtBold isTxtUnderlined (Cons n doc1 documents))
-                                (best indent currCol foregroundColor backgroundColor isTxtBold isTxtUnderlined (Cons n doc2 documents))
+                                (recur indent currCol (Cons n doc1 documents))
+                                (\() -> (recur indent currCol (Cons n doc2 documents)))
 
                         Column fn ->
                             best indent currCol foregroundColor backgroundColor isTxtBold isTxtUnderlined (Cons n (fn currCol) documents)
@@ -1276,7 +1276,7 @@ renderFits doesItFit ribbonPct pageWidth doc =
                             in
                             Formatted formats (best indent currCol fgColor bgColor isBold isUnderlined documents)
 
-        nicest indent currCol doc1 doc2 =
+        nicest indent currCol doc1 doc2Thunk =
             let
                 width =
                     min (pageWidth - currCol) (ribbonWidth - currCol + indent)
@@ -1284,7 +1284,7 @@ renderFits doesItFit ribbonPct pageWidth doc =
             if doesItFit pageWidth (min indent currCol) width doc1 then
                 doc1
             else
-                doc2
+                doc2Thunk ()
     in
     best 0 0 Nothing Nothing False False (Cons 0 doc Nil)
 
