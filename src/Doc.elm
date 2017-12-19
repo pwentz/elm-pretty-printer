@@ -2,9 +2,8 @@ module Doc
     exposing
         ( (|+)
         , Color(..)
-        , ConsoleLayer(..)
+        , ColorBrightness(..)
         , Doc
-        , Formatter
         , NormalForm(..)
         , TextFormat(..)
         , align
@@ -123,7 +122,7 @@ must be passed as the first argument of `Debug.log` (or `console.log` via [Ports
 
 ## Colors
 
-@docs Color, Formatter, ConsoleLayer, black, red, darkRed, green, darkGreen, yellow, darkYellow, blue, darkBlue, magenta, darkMagenta, cyan, darkCyan, white, darkWhite, bgRed, bgWhite, bgBlue, bgYellow, bgCyan, bgGreen, bgBlack, bgMagenta
+@docs Color, DocLayer, ColorBrightness, black, red, darkRed, green, darkGreen, yellow, darkYellow, blue, darkBlue, magenta, darkMagenta, cyan, darkCyan, white, darkWhite, bgRed, bgWhite, bgBlue, bgYellow, bgCyan, bgGreen, bgBlack, bgMagenta
 
 
 ## Formatting
@@ -154,44 +153,44 @@ type Doc
     | Cat Doc Doc
     | Nest Int Doc
     | Union Doc Doc
-    | Color ConsoleLayer Color Doc
-    | Bold Formatter Doc
-    | Underline Formatter Doc
+    | Color DocLayer Color Doc
+    | Bold Doc
+    | Underline Doc
     | Column (Int -> Doc)
     | Columns (Maybe Int -> Doc)
     | Nesting (Int -> Doc)
     | RestoreFormat
         { fgColor : Maybe Color
         , bgColor : Maybe Color
-        , bold : Maybe Formatter
-        , underliner : Maybe Formatter
+        , isBold : Bool
+        , isUnderlined : Bool
         }
-
-
-{-| Type alias for a function that knows how to take a String and return a new String with some
-sort of formatting. Right now formatting can either be color, bold, or underline.
--}
-type alias Formatter =
-    String -> String
 
 
 {-| Different ANSI Colors that can be displayed. Dark variations are available for foreground text.
 Colors may come out differently depending on your terminal.
 -}
 type Color
-    = Black Formatter
-    | Red Formatter
-    | Green Formatter
-    | Yellow Formatter
-    | Blue Formatter
-    | Magenta Formatter
-    | Cyan Formatter
-    | White Formatter
+    = Black ColorBrightness
+    | Red ColorBrightness
+    | Green ColorBrightness
+    | Yellow ColorBrightness
+    | Blue ColorBrightness
+    | Magenta ColorBrightness
+    | Cyan ColorBrightness
+    | White ColorBrightness
+
+
+{-| Different variation of brightness that a color can be rendered with
+-}
+type ColorBrightness
+    = Standard
+    | Dark
 
 
 {-| Different layers that support color formatting.
 -}
-type ConsoleLayer
+type DocLayer
     = Foreground
     | Background
 
@@ -799,105 +798,105 @@ color =
 -}
 black : Doc -> Doc
 black =
-    color (Black Ansi.black)
+    color (Black Standard)
 
 
 {-| Changes text color of Doc to red.
 -}
 red : Doc -> Doc
 red =
-    color (Red Ansi.red)
+    color (Red Standard)
 
 
 {-| Changes text color of Doc to dark red.
 -}
 darkRed : Doc -> Doc
 darkRed =
-    color <| Red (Ansi.dark << Ansi.red)
+    color (Red Dark)
 
 
 {-| Changes text color of Doc to green.
 -}
 green : Doc -> Doc
 green =
-    color (Green Ansi.green)
+    color (Green Standard)
 
 
 {-| Changes text color of Doc to dark green.
 -}
 darkGreen : Doc -> Doc
 darkGreen =
-    color <| Green (Ansi.dark << Ansi.green)
+    color (Green Dark)
 
 
 {-| Changes text color of Doc to yellow.
 -}
 yellow : Doc -> Doc
 yellow =
-    color (Yellow Ansi.yellow)
+    color (Yellow Standard)
 
 
 {-| Changes text color of Doc to dark yellow.
 -}
 darkYellow : Doc -> Doc
 darkYellow =
-    color <| Yellow (Ansi.dark << Ansi.yellow)
+    color (Yellow Dark)
 
 
 {-| Changes text color of Doc to blue.
 -}
 blue : Doc -> Doc
 blue =
-    color (Blue Ansi.blue)
+    color (Blue Standard)
 
 
 {-| Changes text color of Doc to dark blue.
 -}
 darkBlue : Doc -> Doc
 darkBlue =
-    color <| Blue (Ansi.dark << Ansi.blue)
+    color (Blue Dark)
 
 
 {-| Changes text color of Doc to magenta.
 -}
 magenta : Doc -> Doc
 magenta =
-    color (Magenta Ansi.magenta)
+    color (Magenta Standard)
 
 
 {-| Changes text color of Doc to dark magenta.
 -}
 darkMagenta : Doc -> Doc
 darkMagenta =
-    color <| Magenta (Ansi.dark << Ansi.magenta)
+    color (Magenta Dark)
 
 
 {-| Changes text color of Doc to cyan.
 -}
 cyan : Doc -> Doc
 cyan =
-    color (Cyan Ansi.cyan)
+    color (Cyan Standard)
 
 
 {-| Changes text color of Doc to dark cyan.
 -}
 darkCyan : Doc -> Doc
 darkCyan =
-    color <| Cyan (Ansi.dark << Ansi.cyan)
+    color (Cyan Dark)
 
 
 {-| Changes text color of Doc to white.
 -}
 white : Doc -> Doc
 white =
-    color (White Ansi.white)
+    color (White Standard)
 
 
 {-| Changes text color of Doc to dark white.
 -}
 darkWhite : Doc -> Doc
 darkWhite =
-    color <| White (Ansi.dark << Ansi.white)
+    color (White Dark)
 
 
 bgColor : Color -> Doc -> Doc
@@ -909,56 +908,56 @@ bgColor =
 -}
 bgRed : Doc -> Doc
 bgRed =
-    bgColor (Red Ansi.bgRed)
+    bgColor (Red Standard)
 
 
 {-| Changes background color of Doc to white.
 -}
 bgWhite : Doc -> Doc
 bgWhite =
-    bgColor (White Ansi.bgWhite)
+    bgColor (White Standard)
 
 
 {-| Changes background color of Doc to blue.
 -}
 bgBlue : Doc -> Doc
 bgBlue =
-    bgColor (Blue Ansi.bgBlue)
+    bgColor (Blue Standard)
 
 
 {-| Changes background color of Doc to yellow.
 -}
 bgYellow : Doc -> Doc
 bgYellow =
-    bgColor (Yellow Ansi.bgYellow)
+    bgColor (Yellow Standard)
 
 
 {-| Changes background color of Doc to cyan.
 -}
 bgCyan : Doc -> Doc
 bgCyan =
-    bgColor (Cyan Ansi.bgCyan)
+    bgColor (Cyan Standard)
 
 
 {-| Changes background color of Doc to green.
 -}
 bgGreen : Doc -> Doc
 bgGreen =
-    bgColor (Green Ansi.bgGreen)
+    bgColor (Green Standard)
 
 
 {-| Changes background color of Doc to black.
 -}
 bgBlack : Doc -> Doc
 bgBlack =
-    bgColor (Black Ansi.bgBlack)
+    bgColor (Black Standard)
 
 
 {-| Changes background color of Doc to magenta.
 -}
 bgMagenta : Doc -> Doc
 bgMagenta =
-    bgColor (Magenta Ansi.bgMagenta)
+    bgColor (Magenta Standard)
 
 
 
@@ -970,7 +969,7 @@ than a boldness change.
 -}
 bold : Doc -> Doc
 bold =
-    Bold Ansi.bold
+    Bold
 
 
 {-| Removes all bold formatting from a Doc while keeping other formatting.
@@ -978,7 +977,7 @@ bold =
 debold : Doc -> Doc
 debold doc =
     case doc of
-        Bold formatter restOfDoc ->
+        Bold restOfDoc ->
             restOfDoc
 
         Union doc1 doc2 ->
@@ -990,8 +989,8 @@ debold doc =
         Color layer color doc ->
             Color layer color (debold doc)
 
-        Underline formatter doc ->
-            Underline formatter (debold doc)
+        Underline doc ->
+            Underline (debold doc)
 
         FlatAlt doc1 doc2 ->
             FlatAlt (debold doc1) (debold doc2)
@@ -1016,7 +1015,7 @@ debold doc =
 -}
 underline : Doc -> Doc
 underline =
-    Underline Ansi.underline
+    Underline
 
 
 {-| Removes all underlining from a Doc while keeping other formatting.
@@ -1024,7 +1023,7 @@ underline =
 deunderline : Doc -> Doc
 deunderline doc =
     case doc of
-        Underline formatter restOfDoc ->
+        Underline restOfDoc ->
             restOfDoc
 
         Union doc1 doc2 ->
@@ -1036,8 +1035,8 @@ deunderline doc =
         Color layer color doc ->
             Color layer color (deunderline doc)
 
-        Bold formatter doc ->
-            Bold formatter (deunderline doc)
+        Bold doc ->
+            Bold (deunderline doc)
 
         FlatAlt doc1 doc2 ->
             FlatAlt (deunderline doc1) (deunderline doc2)
@@ -1078,10 +1077,10 @@ plain doc =
         Color _ _ doc ->
             plain doc
 
-        Bold _ doc ->
+        Bold doc ->
             plain doc
 
-        Underline _ doc ->
+        Underline doc ->
             plain doc
 
         Column formDoc ->
@@ -1104,9 +1103,9 @@ plain doc =
 {-| Different formats that a text element can take on.
 -}
 type TextFormat
-    = WithColor ConsoleLayer Color
-    | WithUnderline Formatter
-    | WithBold Formatter
+    = WithColor DocLayer Color
+    | WithUnderline
+    | WithBold
     | Default
 
 
@@ -1177,8 +1176,8 @@ renderFits doesItFit ribbonPct pageWidth doc =
                 |> min pageWidth
                 |> max 0
 
-        best : Int -> Int -> Maybe Color -> Maybe Color -> Maybe Formatter -> Maybe Formatter -> Docs -> NormalForm
-        best indent currCol foregroundColor backgroundColor boldFormatter underliner docs =
+        best : Int -> Int -> Maybe Color -> Maybe Color -> Bool -> Bool -> Docs -> NormalForm
+        best indent currCol foregroundColor backgroundColor isTxtBold isTxtUnderlined docs =
             case docs of
                 Nil ->
                     Blank
@@ -1186,15 +1185,15 @@ renderFits doesItFit ribbonPct pageWidth doc =
                 Cons n document documents ->
                     let
                         recur indent currCol docs =
-                            best indent currCol foregroundColor backgroundColor boldFormatter underliner docs
+                            best indent currCol foregroundColor backgroundColor isTxtBold isTxtUnderlined docs
 
                         dsRestore =
                             Cons n
                                 (RestoreFormat
                                     { fgColor = foregroundColor
                                     , bgColor = backgroundColor
-                                    , bold = boldFormatter
-                                    , underliner = underliner
+                                    , isBold = isTxtBold
+                                    , isUnderlined = isTxtUnderlined
                                     }
                                 )
                                 documents
@@ -1218,8 +1217,8 @@ renderFits doesItFit ribbonPct pageWidth doc =
                         Cat doc1 doc2 ->
                             recur indent currCol (Cons n doc1 (Cons n doc2 documents))
 
-                        Nest num doc_ ->
-                            recur indent currCol (Cons (num + n) doc_ documents)
+                        Nest num nestedDoc ->
+                            recur indent currCol (Cons (num + n) nestedDoc documents)
 
                         Union doc1 doc2 ->
                             nicest
@@ -1249,30 +1248,36 @@ renderFits doesItFit ribbonPct pageWidth doc =
                             in
                             Formatted
                                 [ WithColor layer color ]
-                                (best indent currCol fgColor bgColor boldFormatter underliner (Cons n doc dsRestore))
+                                (best indent currCol fgColor bgColor isTxtBold isTxtUnderlined (Cons n doc dsRestore))
 
-                        Bold fn doc ->
+                        Bold doc ->
                             Formatted
-                                [ WithBold fn ]
-                                (best indent currCol foregroundColor backgroundColor (Just fn) underliner (Cons n doc dsRestore))
+                                [ WithBold ]
+                                (best indent currCol foregroundColor backgroundColor True isTxtUnderlined (Cons n doc dsRestore))
 
-                        Underline fn doc ->
+                        Underline doc ->
                             Formatted
-                                [ WithUnderline fn ]
-                                (best indent currCol foregroundColor backgroundColor boldFormatter (Just fn) (Cons n doc dsRestore))
+                                [ WithUnderline ]
+                                (best indent currCol foregroundColor backgroundColor isTxtBold True (Cons n doc dsRestore))
 
-                        RestoreFormat { fgColor, bgColor, bold, underliner } ->
+                        RestoreFormat { fgColor, bgColor, isBold, isUnderlined } ->
                             let
                                 formats =
                                     Default
                                         :: List.filterMap identity
                                             [ Maybe.map (WithColor Foreground) fgColor
                                             , Maybe.map (WithColor Background) bgColor
-                                            , Maybe.map WithBold bold
-                                            , Maybe.map WithUnderline underliner
+                                            , if isBold then
+                                                Just WithBold
+                                              else
+                                                Nothing
+                                            , if isUnderlined then
+                                                Just WithUnderline
+                                              else
+                                                Nothing
                                             ]
                             in
-                            Formatted formats (best indent currCol fgColor bgColor bold underliner documents)
+                            Formatted formats (best indent currCol fgColor bgColor isBold isUnderlined documents)
 
         nicest indent currCol doc1 doc2 =
             let
@@ -1284,7 +1289,7 @@ renderFits doesItFit ribbonPct pageWidth doc =
             else
                 doc2
     in
-    best 0 0 Nothing Nothing Nothing Nothing (Cons 0 doc Nil)
+    best 0 0 Nothing Nothing False False (Cons 0 doc Nil)
 
 
 willFit : Int -> Int -> Int -> NormalForm -> Bool
@@ -1329,24 +1334,24 @@ display simpleDoc =
                 |> String.append (String.cons '\n' (Utils.spaces indents))
 
         Formatted formats sDoc ->
-            List.map getFormatter formats
+            List.map consoleFormatting formats
                 |> List.foldr (<|) (display sDoc)
 
 
-getFormatter : TextFormat -> Formatter
-getFormatter format =
+consoleFormatting : TextFormat -> (String -> String)
+consoleFormatting format =
     case format of
         Default ->
             Ansi.plain
 
         WithColor layer color ->
-            colorFormatter color
+            toAnsiColor layer color
 
-        WithUnderline underliner ->
-            underliner
+        WithUnderline ->
+            Ansi.underline
 
-        WithBold formatter ->
-            formatter
+        WithBold ->
+            Ansi.bold
 
 
 
@@ -1380,8 +1385,8 @@ flatten doc =
         Color layer color doc ->
             Color layer color (flatten doc)
 
-        Bold f doc ->
-            Bold f (flatten doc)
+        Bold doc ->
+            Bold (flatten doc)
 
         other ->
             other
@@ -1412,29 +1417,67 @@ parseString str =
         |> List.foldr parse Empty
 
 
-colorFormatter : Color -> Formatter
-colorFormatter color =
-    case color of
-        Black toBlack ->
-            toBlack
+toAnsiColor : DocLayer -> Color -> (String -> String)
+toAnsiColor layer color =
+    case layer of
+        Background ->
+            case color of
+                Black _ ->
+                    Ansi.bgBlack
 
-        Red toRed ->
-            toRed
+                Red _ ->
+                    Ansi.bgRed
 
-        Green toGreen ->
-            toGreen
+                Green _ ->
+                    Ansi.bgGreen
 
-        Yellow toYellow ->
-            toYellow
+                Yellow _ ->
+                    Ansi.bgYellow
 
-        Blue toBlue ->
-            toBlue
+                Blue _ ->
+                    Ansi.bgBlue
 
-        Magenta toMagenta ->
-            toMagenta
+                Magenta _ ->
+                    Ansi.bgMagenta
 
-        Cyan toCyan ->
-            toCyan
+                Cyan _ ->
+                    Ansi.bgCyan
 
-        White toWhite ->
-            toWhite
+                White _ ->
+                    Ansi.bgWhite
+
+        Foreground ->
+            case color of
+                Black brightness ->
+                    ansiBrightness brightness Ansi.black
+
+                Red brightness ->
+                    ansiBrightness brightness Ansi.red
+
+                Green brightness ->
+                    ansiBrightness brightness Ansi.green
+
+                Yellow brightness ->
+                    ansiBrightness brightness Ansi.yellow
+
+                Blue brightness ->
+                    ansiBrightness brightness Ansi.blue
+
+                Magenta brightness ->
+                    ansiBrightness brightness Ansi.magenta
+
+                Cyan brightness ->
+                    ansiBrightness brightness Ansi.cyan
+
+                White brightness ->
+                    ansiBrightness brightness Ansi.white
+
+
+ansiBrightness : ColorBrightness -> (String -> String) -> (String -> String)
+ansiBrightness brightness formatter =
+    case brightness of
+        Standard ->
+            formatter
+
+        Dark ->
+            Ansi.dark << formatter
