@@ -4,6 +4,7 @@ module Doc
         , Color(..)
         , ColorBrightness(..)
         , Doc
+        , DocLayer(..)
         , NormalForm(..)
         , TextFormat(..)
         , align
@@ -1222,7 +1223,7 @@ renderFits doesItFit ribbonPct pageWidth doc =
                                 indent
                                 currCol
                                 (best indent currCol foregroundColor backgroundColor isTxtBold isTxtUnderlined (Cons n doc1 documents))
-                                (\() -> (best indent currCol foregroundColor backgroundColor isTxtBold isTxtUnderlined (Cons n doc2 documents)))
+                                (\() -> best indent currCol foregroundColor backgroundColor isTxtBold isTxtUnderlined (Cons n doc2 documents))
 
                         Column fn ->
                             best indent currCol foregroundColor backgroundColor isTxtBold isTxtUnderlined (Cons n (fn currCol) documents)
