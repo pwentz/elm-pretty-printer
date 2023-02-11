@@ -1,11 +1,9 @@
+⚠️⚠️⚠️ **THIS PROJECT HAS NOT BEEN UPDATED FOR ELM 0.19 AND WILL NOT FUNCTION** ⚠️⚠️⚠️
+
+
 # elm-pretty-printer
 
 A pretty printing library based off of the [paper by Philip Wadler](https://homepages.inf.ed.ac.uk/wadler/papers/prettier/prettier.pdf).
-
-```
-$ cd example
-$ elm-make --output=elm.js Example.elm && node run.js
-```
 
 
 # Releases
